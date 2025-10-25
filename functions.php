@@ -474,32 +474,64 @@ function getStudentSubscribedInstructors($student_id) {
 function searchInstructors($search_term) {
     $db = new Database();
     
-    // LIKE pattern matching with REGEXP
-    $query = "SELECT id, name, email 
-              FROM instructor 
-              WHERE name LIKE ? OR email LIKE ?
-              ORDER BY name
-              LIMIT 20";
+    // Check if search term is numeric (searching by ID)
+    if (is_numeric($search_term)) {
+        $query = "SELECT id, name, email 
+                  FROM instructor 
+                  WHERE id = ?
+                  ORDER BY name
+                  LIMIT 20";
+        $result = $db->select($query, [intval($search_term)], "i");
+    } else {
+        // LIKE pattern matching with REGEXP for name or email
+        $query = "SELECT id, name, email 
+                  FROM instructor 
+                  WHERE name LIKE ? OR email LIKE ?
+                  ORDER BY name
+                  LIMIT 20";
+        
+        $search_pattern = "%$search_term%";
+        $result = $db->select($query, [$search_pattern, $search_pattern], "ss");
+    }
     
-    $search_pattern = "%$search_term%";
-    $result = $db->select($query, [$search_pattern, $search_pattern], "ss");
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
 function sendClassJoinRequest($student_id, $instructor_id) {
     $db = new Database();
     
+    // Check if instructor exists
+    $check_instructor = "SELECT id FROM instructor WHERE id = ?";
+    $instructor_result = $db->select($check_instructor, [$instructor_id], "i");
+    
+    if ($instructor_result->num_rows === 0) {
+        return ['success' => false, 'message' => 'Instructor not found'];
+    }
+    
     // Check if already exists
     $check_query = "SELECT * FROM class WHERE t_id = ? AND s_id = ?";
     $check_result = $db->select($check_query, [$instructor_id, $student_id], "ii");
     
     if ($check_result->num_rows > 0) {
-        return ['success' => false, 'message' => 'Request already sent or you are already enrolled'];
+        $existing = $check_result->fetch_assoc();
+        if ($existing['status'] === 'approved') {
+            return ['success' => false, 'message' => 'You are already enrolled in this class'];
+        } elseif ($existing['status'] === 'pending') {
+            return ['success' => false, 'message' => 'Your request is already pending approval'];
+        } else {
+            return ['success' => false, 'message' => 'Your previous request was rejected'];
+        }
     }
     
     // INSERT class join request
     $query = "INSERT INTO class (t_id, s_id, status) VALUES (?, ?, 'pending')";
-    return $db->execute($query, [$instructor_id, $student_id], "ii");
+    $result = $db->execute($query, [$instructor_id, $student_id], "ii");
+    
+    if ($result['success']) {
+        return ['success' => true, 'message' => 'Request sent successfully'];
+    }
+    
+    return ['success' => false, 'message' => 'Failed to send request'];
 }
 
 function getQuizQuestions($quiz_id, $student_id) {

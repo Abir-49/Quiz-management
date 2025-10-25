@@ -6,6 +6,41 @@ requireStudent();
 
 $student_id = getUserId();
 
+// Handle join request
+$error = '';
+$success_msg = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_instructor'])) {
+    $instructor_id = intval($_POST['instructor_id']);
+    $keep_search = isset($_POST['keep_search']) ? $_POST['keep_search'] : '';
+    
+    if ($instructor_id > 0) {
+        $result = sendClassJoinRequest($student_id, $instructor_id);
+        
+        if ($result['success']) {
+            $redirect_url = "student_dashboard.php?msg=request_sent";
+            if (!empty($keep_search)) {
+                $redirect_url .= "&search=" . urlencode($keep_search);
+            }
+            header("Location: " . $redirect_url);
+            exit();
+        } else {
+            $error = $result['message'];
+        }
+    } else {
+        $error = "Invalid instructor selected.";
+    }
+}
+
+// Get success message from URL
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'request_sent') {
+        $success_msg = 'Join request sent successfully!';
+    } elseif ($_GET['msg'] === 'quiz_submitted') {
+        $success_msg = 'Quiz submitted successfully!';
+    }
+}
+
 // Get dashboard statistics
 $stats = getStudentDashboardStats($student_id);
 $pending_quizzes = getStudentPendingQuizzes($student_id);
@@ -18,18 +53,6 @@ $search_results = [];
 if (isset($_GET['search']) && !empty($_GET['search'])) {
     $search_term = sanitizeInput($_GET['search']);
     $search_results = searchInstructors($search_term);
-}
-
-// Handle join request
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_instructor'])) {
-    $instructor_id = intval($_POST['instructor_id']);
-    $result = sendClassJoinRequest($student_id, $instructor_id);
-    if ($result['success']) {
-        header("Location: student_dashboard.php?msg=request_sent");
-        exit();
-    } else {
-        $error = $result['message'];
-    }
 }
 ?>
 
@@ -55,16 +78,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_instructor'])) {
     <div class="container dashboard">
         <h2>Student Dashboard</h2>
         
-        <?php if (isset($_GET['msg'])): ?>
-            <div class="alert alert-success">
-                <?php 
-                if ($_GET['msg'] === 'request_sent') echo 'Join request sent successfully!';
-                if ($_GET['msg'] === 'quiz_submitted') echo 'Quiz submitted successfully!';
-                ?>
-            </div>
+        <?php if (!empty($success_msg)): ?>
+            <div class="alert alert-success"><?php echo $success_msg; ?></div>
         <?php endif; ?>
         
-        <?php if (isset($error)): ?>
+        <?php if (!empty($error)): ?>
             <div class="alert alert-danger"><?php echo $error; ?></div>
         <?php endif; ?>
 
@@ -91,18 +109,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_instructor'])) {
         <!-- Join Instructor Section -->
         <div class="section">
             <h3>Join Instructor's Class</h3>
-            <form method="GET" class="search-form">
-                <input type="text" name="search" placeholder="Search instructor by name or email..." 
+            <form method="GET" action="student_dashboard.php" class="search-form">
+                <input type="text" name="search" placeholder="Search instructor by name, email, or ID..." 
                        value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" required>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
             
             <?php if (!empty($search_results)): ?>
             <div class="search-results">
-                <h4>Search Results:</h4>
+                <h4>Search Results (<?php echo count($search_results); ?> found):</h4>
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Action</th>
@@ -111,12 +130,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_instructor'])) {
                     <tbody>
                         <?php foreach ($search_results as $instructor): ?>
                         <tr>
+                            <td><?php echo $instructor['id']; ?></td>
                             <td><?php echo htmlspecialchars($instructor['name']); ?></td>
                             <td><?php echo htmlspecialchars($instructor['email']); ?></td>
                             <td>
-                                <form method="POST" style="display: inline;">
+                                <form method="POST" action="student_dashboard.php" style="display: inline;">
                                     <input type="hidden" name="instructor_id" value="<?php echo $instructor['id']; ?>">
-                                    <button type="submit" name="join_instructor" class="btn btn-sm btn-primary">Send Request</button>
+                                    <input type="hidden" name="keep_search" value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                                    <input type="hidden" name="join_instructor" value="1">
+                                    <button type="submit" class="btn btn-sm btn-primary">Send Request</button>
                                 </form>
                             </td>
                         </tr>
@@ -124,8 +146,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['join_instructor'])) {
                     </tbody>
                 </table>
             </div>
-            <?php elseif (isset($_GET['search'])): ?>
-            <p class="empty-message">No instructors found matching your search.</p>
+            <?php elseif (isset($_GET['search']) && !empty($_GET['search'])): ?>
+            <p class="empty-message">No instructors found matching "<?php echo htmlspecialchars($_GET['search']); ?>".</p>
             <?php endif; ?>
         </div>
 

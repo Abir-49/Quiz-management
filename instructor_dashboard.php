@@ -116,11 +116,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <td>
                             <form method="POST" style="display: inline;">
                                 <input type="hidden" name="student_id" value="<?php echo $request['id']; ?>">
-                                <button type="submit" name="approve_student" class="btn btn-sm btn-success">Approve</button>
+                                <input type="hidden" name="approve_student" value="1">
+                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
                             </form>
                             <form method="POST" style="display: inline;">
                                 <input type="hidden" name="student_id" value="<?php echo $request['id']; ?>">
-                                <button type="submit" name="reject_student" class="btn btn-sm btn-danger">Reject</button>
+                                <input type="hidden" name="reject_student" value="1">
+                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
                             </form>
                         </td>
                     </tr>
