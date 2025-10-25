@@ -1,4 +1,3 @@
-# Quiz-management
 # Quiz Management System
 
 A comprehensive web-based quiz management system built with PHP, MySQL, HTML, CSS, and JavaScript. This project demonstrates all essential database concepts for database lab coursework.
