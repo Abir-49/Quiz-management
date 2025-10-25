@@ -189,11 +189,11 @@ function createQuiz($instructor_id, $quiz_name, $expire_date, $duration, $descri
 function addQuestion($quiz_id, $q_no, $question, $optionA, $optionB, $optionC, $optionD, $answer, $marks) {
     $db = new Database();
     
-    // INSERT question
+    // INSERT question - Fixed parameter count
     $query = "INSERT INTO questions (q_id, q_no, question, A, B, C, D, ans, marks) 
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
-    $result = $db->execute($query, [$quiz_id, $q_no, $question, $optionA, $optionB, $optionC, $optionD, $answer, $marks], "iisssssi");
+    $result = $db->execute($query, [$quiz_id, $q_no, $question, $optionA, $optionB, $optionC, $optionD, $answer, $marks], "iissssssi");
     
     // UPDATE total marks in quiz table
     if ($result['success']) {
