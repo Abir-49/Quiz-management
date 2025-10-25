@@ -25,10 +25,7 @@ if (isInstructor()) {
         exit();
     }
     
-    if (!canViewAnswerScript($quiz_id, $student_id)) {
-        header("Location: student_dashboard.php?error=quiz_not_expired");
-        exit();
-    }
+    
 }
 
 $answer_script = getStudentAnswerScript($quiz_id, $student_id);

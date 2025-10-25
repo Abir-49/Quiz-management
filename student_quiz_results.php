@@ -14,11 +14,7 @@ if (!$quiz_details) {
     exit();
 }
 
-// Check if quiz is expired
-if (!isQuizExpired($quiz_details['expire_date'])) {
-    header("Location: student_dashboard.php?error=quiz_not_expired");
-    exit();
-}
+
 
 // Get all participants for this quiz
 $participants = getQuizParticipants($quiz_id);

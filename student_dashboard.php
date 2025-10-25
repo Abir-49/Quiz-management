@@ -227,7 +227,6 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                         <th>Score</th>
                         <th>Percentage</th>
                         <th>Submitted At</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -242,13 +241,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                             </span>
                         </td>
                         <td><?php echo formatDate($quiz['submitted_at']); ?></td>
-                        <td>
-                            <?php if (isQuizExpired($quiz['expire_date'])): ?>
-                                <a href="view_answer_script.php?quiz_id=<?php echo $quiz['id']; ?>" class="btn btn-sm btn-info">View Answers</a>
-                            <?php else: ?>
-                                <span class="text-muted">Available after expiry</span>
-                            <?php endif; ?>
-                        </td>
+                       
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -286,6 +279,7 @@ if (isset($_GET['search']) && !empty($_GET['search'])) {
                         <td>
                             <a href="student_quiz_results.php?id=<?php echo $quiz['id']; ?>" class="btn btn-sm btn-info">View Results</a>
                         </td>
+                           
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
